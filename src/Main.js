@@ -12,7 +12,7 @@ class Main extends React.Component {
     this.cols = 30;
     this.activeRenders = "5"; // how many calls the cell will be active for
     this.reduceBy = 25; // how much to reduce the color value by per render
-    this.pickFrame = 5;
+    this.pickFrame = 10;
 
     this.state = {
       curFrame: 0,
@@ -154,8 +154,8 @@ class Main extends React.Component {
 
       var picked_row = null;
       var picked_col = null;
-      
-      while (true) {
+
+      for (var attempts = 0; attempts < 3; attempts++) {
 
         picked_row = Math.floor(Math.random() * this.rows);
         picked_col = Math.floor(Math.random() * this.cols);
@@ -173,7 +173,7 @@ class Main extends React.Component {
 
   checkCell = (orig_grid, orig_row, orig_col, new_grid, new_row, new_col) => {
     // compare with new grid to prevent overwrites
-    if (new_grid[new_row][new_col].substr(0, 1) === "0")
+    if (new_grid[new_row][new_col].substr(0, 1) < "4")
       new_grid[new_row][new_col] = orig_grid[orig_row][orig_col];
   }
 
