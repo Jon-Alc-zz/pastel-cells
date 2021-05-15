@@ -9,12 +9,13 @@ class Main extends React.Component {
     super();
     this.speed = 100;
     this.rows = 30;
-    this.cols = 40;
+    this.cols = 30;
     this.activeRenders = "5"; // how many calls the cell will be active for
     this.reduceBy = 25; // how much to reduce the color value by per render
-    this.pickInterval = 10;
+    this.pickFrame = 5;
 
     this.state = {
+      curFrame: 0,
       grid: Array(this.rows).fill().map(() => Array(this.cols).fill("0,0,0,0")),
     }
 
@@ -144,13 +145,35 @@ class Main extends React.Component {
 
     this.setState({
       grid: grid_new,
+      curFrame: this.state.curFrame + 1,
     });
+
+    // automatically pick square at random
+    if (this.state.curFrame === this.pickFrame) {
+      this.setState({ curFrame: 0 });
+
+      var picked_row = null;
+      var picked_col = null;
+      
+      while (true) {
+
+        picked_row = Math.floor(Math.random() * this.rows);
+        picked_col = Math.floor(Math.random() * this.cols);
+
+        if (this.state.grid[picked_row][picked_col].substr(0, 1) === "0") {
+          this.clickSquare(picked_row, picked_col);
+          break;
+        }
+
+      }
+
+    }
 
   }
 
   checkCell = (orig_grid, orig_row, orig_col, new_grid, new_row, new_col) => {
     // compare with new grid to prevent overwrites
-    if (Number(new_grid[new_row][new_col].substr(0, 1)) < 4)
+    if (new_grid[new_row][new_col].substr(0, 1) === "0")
       new_grid[new_row][new_col] = orig_grid[orig_row][orig_col];
   }
 
