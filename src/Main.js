@@ -7,28 +7,30 @@ class Main extends React.Component {
   constructor() {
     
     super();
-    this.speed = 50;
+    this.speed = 100;
     this.rows = 30;
-    this.cols = 50;
-    this.activeRenders = 10; // how many calls the cell will be active for
+    this.cols = 40;
+    this.activeRenders = "5"; // how many calls the cell will be active for
+    this.reduceBy = 25; // how much to reduce the color value by per render
+    this.pickInterval = 10;
 
     this.state = {
-      grid: Array(this.rows).fill().map(() => Array(this.cols).fill(0)),
+      grid: Array(this.rows).fill().map(() => Array(this.cols).fill("0,0,0,0")),
     }
 
   }
 
-  // ====================
-  // LIFTED STATE METHODS
-  // ====================
+  // ==============
+  // SQUARE METHODS
+  // ==============
 
-  selectSquare = (row, col) => {
+  clickSquare = (row, col) => {
 
     let gridCopy = JSON.parse(JSON.stringify(this.state.grid));
 
-    if (gridCopy[row][col] === 0) {
+    if (gridCopy[row][col] === "0,0,0,0") {
     
-      gridCopy[row][col] = this.activeRenders;
+      gridCopy[row][col] = this.makeActive();
 
       this.setState({
         grid: gridCopy,
@@ -38,10 +40,53 @@ class Main extends React.Component {
 
   }
 
-  /*
-  setColor = () => {
-
+  selectColor = () => {
+    return 100 + Math.floor(Math.random() * 7) * 25;
   }
+
+  getColor = (colorStr) => {
+    var temp = colorStr.split(",");
+    for (let i = 0; i < temp.length; i++) {
+      temp[i] = parseInt(temp[i], 10);
+    }
+    return temp;
+  }
+  
+  makeActive = () => {
+    return (this.activeRenders + "," +
+            String(this.selectColor()) + "," +
+            String(this.selectColor()) + "," +
+            String(this.selectColor()));
+  }
+
+  // should only be called when life > 0
+  lowerShade = (colorStr) => {
+
+    var temp = this.getColor(colorStr);
+    temp[0] -= 1; // life ticks down 1
+
+    for (let i = 1; i < temp.length; i++) {
+      temp[i] = Math.max(0, temp[i] - this.reduceBy);
+    }
+
+    temp = String(temp);
+
+    if (temp.substring(0, 1) === "0") {
+      temp = "0,0,0,0";
+    }
+
+    // kill life earlier if no color values
+    else if (temp.substring(1) === ",0,0,0") {
+      temp = "0,0,0,0";
+    }
+
+    return temp;
+
+}
+
+  // =================
+  // COMPONENT METHODS
+  // =================
 
   play = () => {
 
@@ -52,18 +97,66 @@ class Main extends React.Component {
 
       for (let j = 0; j < this.cols; j++) {
 
-        if (i > 0) {
-          if (j > 0) {
+        if (grid_orig[i][j].substr(0, this.activeRenders.length) === this.activeRenders) {
+
+          var not_first_col = (j > 0);
+          var not_last_col = (j < this.cols - 1);
+
+          if (i > 0) {
+
+            this.checkCell(grid_orig, i, j, grid_new, i - 1, j); // top
+            
+            if (not_first_col) // top left
+              this.checkCell(grid_orig, i, j, grid_new, i - 1, j - 1);
+
+            if (not_last_col) // top right
+              this.checkCell(grid_orig, i, j, grid_new, i - 1, j + 1);
 
           }
+
+          if (i < this.rows - 1) {
+
+            this.checkCell(grid_orig, i, j, grid_new, i + 1, j); // bottom
+
+            if (not_first_col)
+              this.checkCell(grid_orig, i, j, grid_new, i + 1, j - 1); // bottom left
+
+            if (not_last_col)
+              this.checkCell(grid_orig, i, j, grid_new, i + 1, j + 1); // bottom right
+
+          }
+
+          if (not_first_col)
+            this.checkCell(grid_orig, i, j, grid_new, i, j - 1); // left
+
+          if (not_last_col)
+            this.checkCell(grid_orig, i, j, grid_new, i, j + 1); // right
+
+        }
+
+        if (grid_orig[i][j].substr(0, 1) !== "0") {
+          grid_new[i][j] = this.lowerShade(grid_orig[i][j]);
         }
 
       }
 
     }
 
+    this.setState({
+      grid: grid_new,
+    });
+
   }
-  */
+
+  checkCell = (orig_grid, orig_row, orig_col, new_grid, new_row, new_col) => {
+    // compare with new grid to prevent overwrites
+    if (Number(new_grid[new_row][new_col].substr(0, 1)) < 4)
+      new_grid[new_row][new_col] = orig_grid[orig_row][orig_col];
+  }
+
+  componentDidMount() {
+    this.intervalId = setInterval(this.play, this.speed);
+  }
 
   render() {
 
@@ -73,7 +166,8 @@ class Main extends React.Component {
           grid={this.state.grid}
           rows={this.rows}
           cols={this.cols}
-          selectSquare={this.selectSquare}
+          clickSquare={this.clickSquare}
+          getColor={this.getColor}
         />
       </div>
     );

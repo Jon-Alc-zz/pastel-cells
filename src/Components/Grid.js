@@ -4,7 +4,6 @@ import '../index.css';
 
 class Grid extends React.Component {
 
-
     render() {
 
         const width = this.props.cols * 19;
@@ -13,12 +12,16 @@ class Grid extends React.Component {
         for (var i = 0; i < this.props.rows; i++) {
             for (var j = 0; j < this.props.cols; j++) {
 
+                var temp = this.props.grid[i][j];
+                temp = this.props.getColor(temp);
+
                 rowsArr.push(
                     <Square
                         row={i}
                         col={j}
+                        color={temp}
                         key={String(i) + "_" + String(j)}
-                        selectSquare={this.props.selectSquare}
+                        clickSquare={this.props.clickSquare}
                     />
                 );
 
